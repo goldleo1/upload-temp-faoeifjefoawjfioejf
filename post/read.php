@@ -8,7 +8,12 @@ if (!is_numeric($_GET['id'])) {
     echo 'no hack';
     die();
 }
-$query = $conn->prepare("SELECT posts.title, posts.description, users.username FROM posts LEFT JOIN users ON posts.user_id=users.id WHERE posts.id=?");
+
+$post_id = $_GET['id'];
+
+$join1 = "LEFT JOIN users ON posts.user_id=users.id";
+$join2 = "LEFT JOIN files ON posts.id=files.post_id";
+$query = $conn->prepare("SELECT posts.title,posts.description,users.username,files.fileSizes,files.fileNames FROM posts ".$join1. " " .$join2. " WHERE posts.id=?");
 $query->bind_param('i', $_GET['id']);
 $query->execute();
 
@@ -18,7 +23,7 @@ if ($result === false) {
     die();
 }
 if ($result->num_rows==0) {
-    die('<script>alert("No Post exists");location.href="/main.php"</script>');
+    die('<script>alert("No Post exists"); location.href = "/index.php?page=1"</script>');
 }
 else {
     $row = $result->fetch_array();
@@ -84,10 +89,36 @@ else {
             margin-top: 10px;
             font-size: inherit;
         }
+
+        .download {
+            color: "black" !important;
+            text-decoration: none !important;
+        }
     </style>
     <script>
         window.onload = () => {
-
+            document.getElementById('deleteBtn').addEventListener('click', (e) => {
+                const author = document.getElementById('author').value;
+                if (author != '<?php echo isset($_SESSION['username'])?$_SESSION['username']:'' ?>') {
+                alert('다른 사람의 글을 삭제할 수 없습니다.');
+            } else {
+                const title = document.getElementById('title').value;
+                const check = prompt(`삭제하려면 제목을 똑같이 입력하세요 : ${title}`);
+                if (check == title) {
+                    location.href = `/post/delete.php?id=<?php echo $_GET['id'] ?>`;
+                } else {
+                    alert('일치하지 않습니다.');
+                }
+            }
+        });
+        document.getElementById('editBtn').addEventListener('click', (e) => {
+            const author = document.getElementById('author').value;
+            if (author != '<?php echo isset($_SESSION['username'])?$_SESSION['username']:'' ?>') {
+            alert('다른 사람의 글을 편집할 수 없습니다.');
+        } else {
+            location.href = `/post/edit.php?id=${postId}`;
+        }
+        });
         }
     </script>
 </head>
@@ -99,10 +130,36 @@ else {
         </header>
         <main>
             <div>
-                <input type="text" id="title" name="title" placeholder="title" readonly value="<?php echo $row['title'] ?>">
-                <input type="text" id="author" name="author" placeholder="author" readonly value="<?php echo $row['username'] ?>">
-                <textarea name="description" id="description" placeholder="description" readonly><?php echo $row['description'] ?></textarea>
+                <input type="text" id="title" name="title" placeholder="title" readonly
+                    value="<?php echo $row['title'] ?>">
+                <input type="text" id="author" name="author" placeholder="author" readonly
+                    value="<?php echo $row['username'] ?>">
+                <textarea name="description" id="description" placeholder="description"
+                    readonly><?php echo $row['description'] ?></textarea>
             </div>
+            <?php if($row['fileNames']) {
+                $fileNames = explode('|', $row['fileNames']);
+                $fileSizes = explode('|', $row['fileSizes']);
+                echo "<ul>";
+                
+                for ($i=0; $i < count($fileNames); $i++) { 
+                    $fileName = base64_decode($fileNames[$i]);
+                    $fileSize = base64_decode($fileSizes[$i]);
+                    if ($fileSize>$mb) {
+                        $_size = round($fileSize/$mb, 1) . "MB";
+                    } elseif ($fileSize > $kb) {
+                        $_size = round($fileSize/$kb, 1) . "KB";
+                    } else {
+                        $_size = $fileSize . "Byte";
+                    }
+                    $file = $_size;
+                    echo "<li class='download'><a href='/post/download.php?post_id=".$post_id."&filename=".$fileName."' class='download'>" . $fileName ." (" . $file . ")" . "</a></li>";
+                }
+                echo "</ul>";
+            }
+            ?>
+            <button id="editBtn">수정하기</button>
+            <button id="deleteBtn">삭제하기</button>
         </main>
     </div>
 </body>

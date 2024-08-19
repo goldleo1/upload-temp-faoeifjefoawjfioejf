@@ -6,14 +6,16 @@ if (!isset($_GET['page']) || !is_numeric($_GET['page']) || $_GET['page'] < 1) {
 $page = (int)$_GET['page'];
 $order = ' ORDER BY createdAt DESC';
 $limit = ' limit ' . ($page-1)*10 . ',10';
+$join1 = "LEFT JOIN users ON posts.user_id=users.id";
+$join2 = "LEFT JOIN files ON posts.id=files.post_id";
 if (isset($_GET['search']) && is_string($_GET['search']) && $_GET['search'] != '') {
     $search = '%' . $_GET['search'] . '%';
-    $_q = "SELECT posts.id,title,description,createdAt,users.username FROM posts LEFT JOIN users ON posts.user_id=users.id where title like ? OR description like ? OR username like ?";
+    $_q = "SELECT posts.id,title,description,createdAt,users.username,files.fileSizeSum,files.fileCount FROM posts ".$join1. "." . $join2 . " where title like ? OR description like ? OR username like ?";
     $q = $_q . $order . $limit;
     $query = $conn->prepare($q);
     $query->bind_param('sss', $search, $search, $search);
 } else {
-    $_q = "SELECT posts.id,title,description,createdAt,users.username FROM posts LEFT JOIN users ON posts.user_id=users.id";
+    $_q = "SELECT posts.id,title,description,createdAt,users.username,files.fileSizeSum,files.fileCount FROM posts ".$join1. " " . $join2;
     $q = $_q . $order . $limit;
     
     $query = $conn->prepare($q);
@@ -64,6 +66,11 @@ if (!$result) {
             border: 1px solid black;
             border-collapse: collapse;
         }
+
+        th,
+        td {
+            height: 38px;
+        }
     </style>
     <script>
         window.onload = () => {
@@ -71,7 +78,7 @@ if (!$result) {
             const writePostBtn = document.getElementById('writePost');
             searchInput.addEventListener('keypress', (e) => {
                 if (e.code === 'Enter') {
-                    location.href = `${location.origin}/main.php?search=${e.target.value}`;
+                    location.href = `${location.origin}/index.php?search=${e.target.value}`;
                 }
             })
 
@@ -84,7 +91,7 @@ if (!$result) {
                     const tr = e.target.parentNode.parentNode;
                     const postId = tr.id;
                     const author = tr.querySelector('td.author').innerText;
-                    if (author != '<?php echo $_SESSION['username'] ?>') {
+                    if (author != '<?php echo isset($_SESSION['username'])?$_SESSION['username']:'' ?>') {
                     alert('다른 사람의 글을 삭제할 수 없습니다.');
                 } else {
                     const title = tr.querySelector('td.title');
@@ -102,7 +109,7 @@ if (!$result) {
                 const tr = e.target.parentNode.parentNode;
                 const postId = tr.id;
                 const author = tr.querySelector('td.author').innerText;
-                if (author != '<?php echo $_SESSION['username'] ?>') {
+                if (author != '<?php isset($_SESSION['username'])?$_SESSION['username']:'' ?>') {
                 alert('다른 사람의 글을 편집할 수 없습니다.');
             } else {
                 location.href = `/post/edit.php?id=${postId}`;
@@ -144,26 +151,39 @@ if (!$result) {
                     <col width="10%" />
                     <col width="25%" />
                     <col width="35%" />
-                    <col width="15%" />
-                    <col width="10%" />
+                    <col width="13%" />
+                    <col width="12%" />
                 </colgroup>
                 <tr>
                     <th class="date">날짜</th>
                     <th class="title">제목</th>
                     <th class="desription">내용</th>
                     <th class="author">작성자</th>
-                    <th class="author">보기</th>
+                    <th class="files">첨부파일</th>
                 </tr>
                 <?php
                     if ($result) {
+                        
                         while ($row = mysqli_fetch_array($result)) {
-                            // echo var_dump($row);
+                            $fileSizeSum = $row['fileSizeSum'];
+                            if($row['fileSizeSum'] && $row['fileCount']) {
+                                if ($fileSizeSum>$mb) {
+                                    $_size = round($fileSizeSum/$mb, 1) . "MB";
+                                } elseif ($fileSizeSum > $kb) {
+                                    $_size = round($fileSizeSum/$kb, 1) . "KB";
+                                } else {
+                                    $_size = $fileSizeSum . "Byte";
+                                }
+                                $file = $_size . " | " . $row['fileCount'] . "개";
+                            } else {
+                                $file = "없음";
+                            }
                             echo '<tr id="' . $row['id'] . '">';
                             echo '<td class="date">' . explode(' ', $row['createdAt'])[0] . '</td>';
                             echo '<td class="title"><a href="/post/read.php?id=' . $row['id'] . '">' . htmlspecialchars($row['title']) . '</a></td>';
                             echo '<td class="description">' . htmlspecialchars(substr($row['description'], 0, 30)) . '</td>';
                             echo '<td class="author">' . htmlspecialchars($row['username']) . '</td>';
-                            echo '<td class="author"> <button class="editBtn">수정하기</button> <button class="deleteBtn">삭제하기</button> </td>';
+                            echo '<td class="files">' . $file . '</td>';
                         }
                     }
                     mysqli_free_result($result);
