@@ -33,12 +33,6 @@ ol[role='list'] {
     list-style: none;
 }
 
-/* 핵심 body의 기본값을 설정합니다. */
-body {
-    min-height: 100vh;
-    line-height: 1.5;
-}
-
 /* 제목 요소와 상호작용하는 요소에 대해 line-height를 더 짧게 설정합니다. */
 h1,
 h2,
@@ -58,10 +52,9 @@ h4 {
     text-wrap: balance;
 }
 
-/* 클래스가 없는 기본 a 태그 요소는 기본 스타일을 가져옵니다. */
-a:not([class]) {
-    text-decoration-skip-ink: auto;
-    color: currentColor;
+a {
+    text-decoration-line: auto;
+    color: black;
 }
 
 /* 이미지 관련 작업을 더 쉽게 합니다. */
@@ -79,12 +72,10 @@ select {
     font: inherit;
 }
 
-
-/* 고정된 모든 항목에는 여분의 스크롤 여백이 있어야 합니다. */
-:target {
-    scroll-margin-block: 5ex;
-}
-
 .right {
     text-align: right;
+}
+
+.left {
+    text-align: left;
 }

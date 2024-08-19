@@ -37,10 +37,12 @@ else {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/static/css/reset.css">
     <style>
         #wrap {
             width: 1000px;
             margin: 0 auto;
+            padding: 10px 0;
         }
 
         /* readonly */
@@ -116,7 +118,7 @@ else {
             if (author != '<?php echo isset($_SESSION['username'])?$_SESSION['username']:'' ?>') {
             alert('다른 사람의 글을 편집할 수 없습니다.');
         } else {
-            location.href = `/post/edit.php?id=${postId}`;
+            location.href = `/post/edit.php?id=<?php echo $_GET['id'] ?>`;
         }
         });
         }

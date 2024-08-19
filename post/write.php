@@ -34,13 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileNames = array();
         $fileSizes = array();
         echo var_dump($_FILES["file"]["name"]);
-        
+
         if ($cnt > 5) alert_back("첨부파일이 너무 많습니다. 최대 5개입니다.");
         for ($i=0; $i < $cnt; $i++) {
             $fileSize = $_FILES["file"]["size"][$i];
             $fileName = $_FILES["file"]["name"][$i];
             if ($fileSize > $maxFileSize) alert_back("단일 파일 크기가 너무 큽니다. 최대 단일 파일 크기는 " . ($maxFileSize / (1024 * 1024)) . "MB입니다.");
-            if (strlen($fileName) > 50) alert_back("파일 이름이 너무 깁니다. 최대 50자입니다.");
+            if (strlen($fileName) > $maxFileNameLength) alert_back("파일 이름이 너무 깁니다. 최대 " . (string)$maxFileNameLength .  "자입니다.");
             $fileSizeSum += $fileSize;
 
             $fileNames[] = base64_encode($fileName);
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     // die(var_dump($fileSizes));  
-    die('<script>alert("Post created");location.href = "/index.php?page=1"</script>');
+    die('<script>alert("Post created"); location.href = "/index.php?page=1"</script>');
 }
 ?>
 
@@ -102,10 +102,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/static/css/reset.css">
+
     <style>
         #wrap {
             width: 1000px;
             margin: 0 auto;
+            padding: 10px 0;
         }
 
         nav {

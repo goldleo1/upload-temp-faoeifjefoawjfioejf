@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $row = $result->fetch_array();
 
     if ($row['user_id'] != $_SESSION['user_id']) {
-        die('<script>alert("Cannot edit others post"); location.href = "/main.php"</script>');
+        die('<script>alert("Cannot edit others post"); location.href = "/index.php"</script>');
     }
 
     $query = $conn->prepare("UPDATE posts SET title = ?, description = ? where id = ?");
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $query->execute();
     $result = $query->get_result();
 
-    die('<script>alert("Post edited"); location.href = "/main.php"</script>');
+    die('<script>alert("Post edited"); location.href = "/index.php"</script>');
 } else {
     if (!isset($_GET['id']) || $_GET['id'] == '') {
         echo 'Usage /post/edit.php?id=1';
@@ -55,12 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die();
     }
     if ($result->num_rows==0) {
-        die('<script>alert("No Post exists"); location.href = "/main.php"</script>');
+        die('<script>alert("No Post exists"); location.href = "/index.php"</script>');
     }
     else {
         $row = $result->fetch_array();
         if ($row['username'] != $_SESSION['username']) {
-            die('<script>alert("Cannot edit others post"); location.href = "/main.php"</script>');
+            die('<script>alert("Cannot edit others post"); location.href = "/index.php"</script>');
         }
     }
 }
